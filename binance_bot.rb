@@ -79,6 +79,9 @@ REQUEST_TIME  = 0.6                                               # Time in seco
 
 #   Reference for binance API: https://github.com/jakenberg/binance-ruby
 
+# IDEA: Add function that scans all currency pairs on exchange, looking for the most volitle (and takes into consideration volume) and selects that pair for trading (would also need to
+#       issue a market order if the base currency isn't currently in our balance).
+
 #########
 # NOTES #
 #########
@@ -88,8 +91,8 @@ REQUEST_TIME  = 0.6                                               # Time in seco
 #########
 
 # Add email functionality
-# Add stop logic
-# Add buy/sell logic
+# Re-write algo logic, Ruby has limited recursion capability and this will eventually be a problem for exceptionally long trade swings (I'm guessing it will be good for at least 3 - 6
+# hours.
 
 #########
 # TO DO #
