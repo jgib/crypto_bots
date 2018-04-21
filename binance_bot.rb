@@ -488,7 +488,7 @@ def ask_side()
   puts "2) => SELL"
   puts ""
   puts ""
-  print "? >"
+  print "> "
   input = gets.chomp
   if(input == "1" or input == "2")
     if(input == "1")
