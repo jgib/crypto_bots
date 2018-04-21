@@ -110,8 +110,9 @@ def debug(text)
   # INPUT:  STRING
   # OUTPUT: Displays string input prepended with timestamp if DEBUG is set to true in config.
   if DEBUG == true
-    time = get_timestamp
-    STDERR.puts("#{time} ::: #{text}")
+    parent = caller_locations[0].label.to_s
+    time   = get_timestamp
+    STDERR.puts("#{time} ::: #{parent} ::: #{text}")
   end
 end
 
@@ -282,7 +283,9 @@ def cancel_order(order_id)
   rescue Binance::Api::Error => error
     debug("ERROR")
     pp error
-    return(cancel_order(order_id))
+    #return(cancel_order(order_id))
+    # Possbile the order was filled between being checked if filled and being canceled.
+    return()
   end
 end
 
@@ -521,18 +524,26 @@ def check_filled(order_id,side)
     lband  = bbands[2].to_f.floor2(ROUND)
     price  = get_order_price(order_id).to_f.floor2(ROUND)
     if(side == "buy")
+      debug("Checking if lband == price #{lband} == #{price}")
       if(lband == price)
+        debug("True")
         check_filled(order_id,side)
       else
+        debug("False")
         cancel_order(order_id)
         return(false)
       end
     elsif(side == "sell")
+      debug("Checking if stop_order(#{order_id})")
       if(stop_order(order_id))
+        debug("True")
         return(true)
       elsif(mband == price)
+        debug("False")
+        debug("mband == price #{mband} == #{price}")
         check_filled(order_id,side)
       else
+        debug("False")
         cancel_order(order_id)
         return(false)
       end
@@ -619,6 +630,8 @@ def main()
 #  algo_bb1(ask_side())
   side = ask_side()
   while true do
+    debug("Running Algo...")
+    debug("Side is: #{side}")
     side = algo_bb2(side)
   end
 end
