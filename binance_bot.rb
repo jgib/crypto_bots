@@ -162,6 +162,8 @@ def get_candles()
   rescue Binance::Api::Error => error
     debug("ERROR")
     pp error
+    pp error.class
+    exit()
     return(get_candles())
   else
     return(output)
@@ -249,6 +251,8 @@ def limit_order(side,qty,price)
   rescue Binance::Api::Error => error
     debug("ERROR")
     pp error
+    pp error.class
+    exit()
     return(limit_order(side,qty,price))
   else
     return(order_id)
@@ -266,6 +270,8 @@ def market_order(side,qty)
   rescue Binance::Api::Error => error
     debug("ERROR")
     pp error
+    pp error.class
+    exit()
     return(market_order(side,qty))
   else
     return(order_id)
@@ -283,6 +289,7 @@ def cancel_order(order_id)
   rescue Binance::Api::Error => error
     debug("ERROR")
     pp error
+    pp error.class
     #return(cancel_order(order_id))
     # Possbile the order was filled between being checked if filled and being canceled.
     return()
@@ -299,6 +306,8 @@ def check_order_status(order_id)
   rescue Binance::Api::Error => error
     debug("ERROR")
     pp error
+    pp error.class
+    exit()
     return(check_order_status(order_id))
   else
     if(data.is_a?(Array))
@@ -330,6 +339,8 @@ def get_order_price(order_id)
   rescue Binance::Api::Error => error
     debug("ERROR")
     pp error
+    pp error.class
+    exit()
     return(get_order_price(order_id))
   else
     return(price)
@@ -347,6 +358,8 @@ def get_ticker()
   rescue Binance::Api::Error => error
     debug("ERROR")
     pp error
+    pp error.class
+    exit()
     return(get_ticker())
   else
     return(ticker_price)
@@ -364,6 +377,8 @@ def get_balance()
   rescue Binance::Api::Error => error
     debug("ERROR")
     pp error
+    pp error.class
+    exit()
     return(get_balance())
   else
     balances[:balances].each do |index|
@@ -391,6 +406,8 @@ def price_filter()
   rescue Binance::Api::Error => error
     debug("ERROR")
     pp error
+    pp error.class
+    exit()
     return(price_filter())
   else
     currencies.each do |currency|
