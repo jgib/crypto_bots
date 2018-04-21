@@ -240,6 +240,7 @@ def limit_order(side,qty,price)
   debug("Initiating limit order: side=#{side}, qty=#{qty}, price=#{price}")
   if(qty == 0)
     debug("Quantity is: #{qty}, exiting...")
+    exit()
   end
   begin
     order_id = Binance::Api::Order.create!(side: "#{side}", quantity: "#{qty}", price: "#{price}", symbol: "#{SYMBOL}", timeInForce: "GTC", type: "LIMIT")[:orderId].to_s
@@ -503,10 +504,17 @@ end
 
 def check_filled(order_id,side)
   # INPUT:  INTEGER, STRING,  Order ID and buy/sell
+  # OUTPUT: BOOL
+  debug("Checking if order #{order_id} is filled")
   status = check_order_status(order_id)
   if(status == "FILLED")
+    debug("True")
     return(true)
+  elsif(status == "PARTIALLY_FILLED")
+    wait(1)
+    return(check_filled(order_id,side))
   else
+    debug("False")
     bbands = calc_bbands(get_candles())
     mband  = bbands[0].to_f.floor2(ROUND)
     uband  = bbands[1].to_f.floor2(ROUND)
@@ -555,7 +563,7 @@ def algo_bb2(side)
     if(side == "buy")
       side = "sell"
       return(side)
-    elsif(side = "sell")
+    elsif(side == "sell")
       side = "buy"
       return(side)
     end
