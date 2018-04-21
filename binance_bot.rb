@@ -264,7 +264,7 @@ def check_order_status(order_id)
   if(data.is_a?(Array))
     if(data[0].is_a?(Hash))
       if(data[0].key?(:status))
-        stauts = data[0][:status].to_s
+        status = data[0][:status].to_s
         debug("Status is: #{status}")
         return(status)
       else
