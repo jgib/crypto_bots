@@ -379,8 +379,8 @@ def trade(side)
       debug("Calculating price: #{mband} * #{SELL_PERCENT}")
       price    = (mband * SELL_PERCENT).floor2(ROUND)
       debug("Price is: #{price}")
-      debug("Calculating quantity: #{balance1} * #{price}")
-      qty      = (balance2 * price).floor2(ROUND)
+      debug("Calculating quantity: #{balance1}")
+      qty      = balance2.floor2(ROUND)
       debug("Quantity is: #{qty}")
       order_id = limit_order("SELL",qty,price)
       return(order_id)
@@ -469,6 +469,32 @@ def algo_bb1(side)
   end
 end
 
+def ask_side()
+  # INPUT:  Buy or Sell
+  # OUTPUT: Buy or Sell
+  puts ""
+  puts ""
+  puts "###########################"
+  puts "### Choose: BUY or SELL ###"
+  puts "###########################"
+  puts ""
+  puts "1) => BUY"
+  puts ""
+  puts "2) => SELL"
+  puts ""
+  puts ""
+  print "? >"
+  input = gets.chomp
+  if(input == "1" or input == "2")
+    if(input == "1")
+      return("buy")
+    elsif(input == "2")
+      return("sell")
+    end
+  else
+    ask_side()
+  end
+end
 def main()
   # INPUT:  NONE
   # OUTPUT: NONE
@@ -487,7 +513,7 @@ def main()
   Binance::Api::Configuration.api_key    = api_key
   debug("Loading Secret Key")
   Binance::Api::Configuration.secret_key = secret_key
-  algo_bb1("buy")
+  algo_bb1(ask_side())
 end
 
 main()
