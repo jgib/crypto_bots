@@ -156,8 +156,15 @@ def get_candles()
   #                                         Taker Buy Quote Asset Volume, Ignore], ..... ]
   wait(REQUEST_TIME)
   debug("Getting candlestick data")
-  output = Binance::Api.candlesticks!(interval: "#{INTERVAL}", symbol: "#{SYMBOL}", limit: "#{PERIOD}")
-  return(output)
+  begin
+    output = Binance::Api.candlesticks!(interval: "#{INTERVAL}", symbol: "#{SYMBOL}", limit: "#{PERIOD}")
+  rescue Binance::Api::Error => error
+    debug("ERROR")
+    pp error
+    return(get_candles())
+  else
+    return(output)
+  end
 end
 
 def sma(prices)
@@ -231,9 +238,16 @@ def limit_order(side,qty,price)
   # OUTPUT: INTEGER, Order ID.
   wait(REQUEST_TIME)
   debug("Initiating limit order: side=#{side}, qty=#{qty}, price=#{price}")
-  order_id = Binance::Api::Order.create!(side: "#{side}", quantity: "#{qty}", price: "#{price}", symbol: "#{SYMBOL}", timeInForce: "GTC", type: "LIMIT")[:orderId].to_s
-  debug("Order ID: #{order_id}")
-  return(order_id)
+  begin
+    order_id = Binance::Api::Order.create!(side: "#{side}", quantity: "#{qty}", price: "#{price}", symbol: "#{SYMBOL}", timeInForce: "GTC", type: "LIMIT")[:orderId].to_s
+    debug("Order ID: #{order_id}")
+  rescue Binance::Api::Error => error
+    debug("ERROR")
+    pp error
+    return(limit_order(side,qty,price))
+  else
+    return(order_id)
+  end
 end
 
 def market_order(side,qty)
@@ -241,9 +255,16 @@ def market_order(side,qty)
   # OUTPUT: INTEGER, Order ID.
   wait(REQUEST_TIME)
   debug("Initiating market order: side=#{side}, qty=#{qty}")
-  order_id = Binance::Api::Order.create!(side: "#{side}", quantity: "#{qty}", symbol: "#{SYMBOL}", type: "MARKET")[:orderId].to_s
-  debug("Order ID: #{order_id}")
-  return(order_id)
+  begin
+    order_id = Binance::Api::Order.create!(side: "#{side}", quantity: "#{qty}", symbol: "#{SYMBOL}", type: "MARKET")[:orderId].to_s
+    debug("Order ID: #{order_id}")
+  resuce Binance::Api::Error => error
+    debug("ERROR")
+    pp error
+    return(market_order(side,qty))
+  else
+    return(order_id)
+  end
 end
 
 def cancel_order(order_id)
@@ -251,8 +272,14 @@ def cancel_order(order_id)
   # OUTPUT: NONE
   wait(REQUEST_TIME)
   debug("Preparing to cancel order: #{order_id}")
-  Binance::Api::Order.cancel!(orderId: "#{order_id}", symbol: "#{SYMBOL}")
-  debug("Order: #{order_id} canceled")
+  begin
+    Binance::Api::Order.cancel!(orderId: "#{order_id}", symbol: "#{SYMBOL}")
+    debug("Order: #{order_id} canceled")
+  rescue Binance::Api::Error => error
+    debug("ERROR"))
+    pp error
+    return(cancel_order(order_id))
+  end
 end
 
 def check_order_status(order_id)
@@ -260,21 +287,28 @@ def check_order_status(order_id)
   # OUTPUT: STRING, Order Status.
   wait(REQUEST_TIME)
   debug("Checking order status of: #{order_id}")
-  data    = Binance::Api::Order.all!(orderId: "#{order_id}", symbol: "#{SYMBOL}")
-  if(data.is_a?(Array))
-    if(data[0].is_a?(Hash))
-      if(data[0].key?(:status))
-        status = data[0][:status].to_s
-        debug("Status is: #{status}")
-        return(status)
+  begin
+    data    = Binance::Api::Order.all!(orderId: "#{order_id}", symbol: "#{SYMBOL}")
+  rescue Binance::Api::Error => error
+    debug("ERROR")
+    pp error
+    return(check_order_status(order_id))
+  else
+    if(data.is_a?(Array))
+      if(data[0].is_a?(Hash))
+        if(data[0].key?(:status))
+          status = data[0][:status].to_s
+          debug("Status is: #{status}")
+          return(status)
+        else
+          return(check_order_status(order_id))
+        end
       else
         return(check_order_status(order_id))
       end
     else
       return(check_order_status(order_id))
     end
-  else
-    return(check_order_status(order_id))
   end
 end
 
@@ -283,9 +317,16 @@ def get_order_price(order_id)
   # OUTPUT: FLOAT, Price of Order.
   wait(REQUEST_TIME)
   debug("Checking order price of: #{order_id}")
-  price = Binance::Api::Order.all!(orderId: "#{order_id}", symbol: "#{SYMBOL}")[0][:price].to_f
-  debug("Price is: #{price}")
-  return(price)
+  begin
+    price = Binance::Api::Order.all!(orderId: "#{order_id}", symbol: "#{SYMBOL}")[0][:price].to_f
+    debug("Price is: #{price}")
+  resuce Binance::Api::Error => error
+    debug("ERROR")
+    pp error
+    return(get_order_price(order_id)
+  else
+    return(price)
+  end
 end
 
 def get_ticker()
@@ -293,9 +334,16 @@ def get_ticker()
   # OUTPUT: FLOAT, Ticker Price.
   wait(REQUEST_TIME)
   debug("Getting ticker price")
-  ticker_price = Binance::Api.ticker!(symbol: "#{SYMBOL}", type: "price")[:price].to_s
-  debug("Ticker price is: #{ticker_price}")
-  return(ticker_price)
+  begin
+    ticker_price = Binance::Api.ticker!(symbol: "#{SYMBOL}", type: "price")[:price].to_s
+    debug("Ticker price is: #{ticker_price}")
+  rescue Binance::Api::Error => error
+    debug("ERROR")
+    pp error
+    return(get_ticker())
+  else
+    return(ticker_price)
+  end
 end
 
 def get_balance()
@@ -304,19 +352,26 @@ def get_balance()
   wait(REQUEST_TIME)
   debug("Getting account balances")
   output   = Array.new
-  balances = Binance::Api::Account.info!
-  balances[:balances].each do |index|
-    if(index[:asset] == PAIR1)
-      balance1 = index[:free]
-      debug("Balance for #{PAIR1} is: #{balance1}")
-      output.push(balance1)
-    elsif(index[:asset] == PAIR2)
-      balance2 = index[:free]
-      debug("Balance for #{PAIR2} is: #{balance2}")
-      output.push(balance2)
+  begin
+    balances = Binance::Api::Account.info!
+  resuce Binance::Api::Error => error
+    debug("ERROR")
+    pp error
+    return(get_balance())
+  else
+    balances[:balances].each do |index|
+      if(index[:asset] == PAIR1)
+        balance1 = index[:free]
+        debug("Balance for #{PAIR1} is: #{balance1}")
+        output.push(balance1)
+      elsif(index[:asset] == PAIR2)
+        balance2 = index[:free]
+        debug("Balance for #{PAIR2} is: #{balance2}")
+        output.push(balance2)
+      end
     end
+    return(output)
   end
-  return(output)
 end
 
 def price_filter()
@@ -324,15 +379,22 @@ def price_filter()
   # OUTPUT: NONE
   wait(REQUEST_TIME)
   debug("Getting price filter")
-  currencies = Binance::Api.exchange_info![:symbols]
-  currencies.each do |currency|
-    if(currency[:symbol] == "#{SYMBOL}")
-      filters = currency[:filters]
-      filters.each do |filter|
-        if(filter[:filterType] == "PRICE_FILTER")
-          debug("Min price is: #{filter[:minPrice]}")
-          debug("Max price is: #{filter[:maxPrice]}")
-          debug("Tick size is: #{filter[:tickSize]}")
+  begin
+    currencies = Binance::Api.exchange_info![:symbols]
+  resuce Binance::Api::Error => error
+    debug("ERROR")
+    pp error
+    return(price_filter())
+  else
+    currencies.each do |currency|
+      if(currency[:symbol] == "#{SYMBOL}")
+        filters = currency[:filters]
+        filters.each do |filter|
+          if(filter[:filterType] == "PRICE_FILTER")
+            debug("Min price is: #{filter[:minPrice]}")
+            debug("Max price is: #{filter[:maxPrice]}")
+            debug("Tick size is: #{filter[:tickSize]}")
+          end
         end
       end
     end
