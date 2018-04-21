@@ -258,7 +258,7 @@ def market_order(side,qty)
   begin
     order_id = Binance::Api::Order.create!(side: "#{side}", quantity: "#{qty}", symbol: "#{SYMBOL}", type: "MARKET")[:orderId].to_s
     debug("Order ID: #{order_id}")
-  resuce Binance::Api::Error => error
+  rescue Binance::Api::Error => error
     debug("ERROR")
     pp error
     return(market_order(side,qty))
