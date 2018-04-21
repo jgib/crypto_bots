@@ -276,7 +276,7 @@ def cancel_order(order_id)
     Binance::Api::Order.cancel!(orderId: "#{order_id}", symbol: "#{SYMBOL}")
     debug("Order: #{order_id} canceled")
   rescue Binance::Api::Error => error
-    debug("ERROR"))
+    debug("ERROR")
     pp error
     return(cancel_order(order_id))
   end
@@ -320,10 +320,10 @@ def get_order_price(order_id)
   begin
     price = Binance::Api::Order.all!(orderId: "#{order_id}", symbol: "#{SYMBOL}")[0][:price].to_f
     debug("Price is: #{price}")
-  resuce Binance::Api::Error => error
+  rescue Binance::Api::Error => error
     debug("ERROR")
     pp error
-    return(get_order_price(order_id)
+    return(get_order_price(order_id))
   else
     return(price)
   end
@@ -354,7 +354,7 @@ def get_balance()
   output   = Array.new
   begin
     balances = Binance::Api::Account.info!
-  resuce Binance::Api::Error => error
+  rescue Binance::Api::Error => error
     debug("ERROR")
     pp error
     return(get_balance())
@@ -381,7 +381,7 @@ def price_filter()
   debug("Getting price filter")
   begin
     currencies = Binance::Api.exchange_info![:symbols]
-  resuce Binance::Api::Error => error
+  rescue Binance::Api::Error => error
     debug("ERROR")
     pp error
     return(price_filter())
