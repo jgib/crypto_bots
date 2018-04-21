@@ -498,10 +498,10 @@ def stop_order(order_id)
     market_order("sell",qty)
     debug("Initiating stop wait time.")
     wait(STOP_WAIT)
-    return(false)
+    return(true)
   else
     debug("False")
-    return(true)
+    return(false)
   end
 end
 
