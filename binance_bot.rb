@@ -261,12 +261,20 @@ def check_order_status(order_id)
   wait(REQUEST_TIME)
   debug("Checking order status of: #{order_id}")
   data    = Binance::Api::Order.all!(orderId: "#{order_id}", symbol: "#{SYMBOL}")
-  if(data == nil)
-    return(check_order_status(order_id))
+  if(data.is_a?(Array))
+    if(data[0].is_a?(Hash))
+      if(data[0].key?(:status))
+        stauts = data[0][:status].to_s
+        debug("Status is: #{status}")
+        return(status)
+      else
+        return(check_order_status(order_id))
+      end
+    else
+      return(check_order_status(order_id))
+    end
   else
-    status  = data[0][:status].to_s
-    debug("Status is: #{status}")
-    return(status)
+    return(check_order_status(order_id))
   end
 end
 
