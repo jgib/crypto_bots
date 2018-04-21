@@ -238,6 +238,9 @@ def limit_order(side,qty,price)
   # OUTPUT: INTEGER, Order ID.
   wait(REQUEST_TIME)
   debug("Initiating limit order: side=#{side}, qty=#{qty}, price=#{price}")
+  if(qty == 0)
+    debug("Quantity is: #{qty}, exiting...")
+  end
   begin
     order_id = Binance::Api::Order.create!(side: "#{side}", quantity: "#{qty}", price: "#{price}", symbol: "#{SYMBOL}", timeInForce: "GTC", type: "LIMIT")[:orderId].to_s
     debug("Order ID: #{order_id}")
@@ -544,6 +547,23 @@ def algo_bb1(side)
   end
 end
 
+def algo_bb2(side)
+  # INPUT:  STRING, buy/sell
+  # OUTPUT: NONE
+  order_id = trade(side)
+  if(check_filled(order_id,side))
+    if(side == "buy")
+      side = "sell"
+      return(side)
+    elsif(side = "sell")
+      side = "buy"
+      return(side)
+    end
+  else
+    return(side)
+  end
+end
+
 def ask_side()
   # INPUT:  Buy or Sell
   # OUTPUT: Buy or Sell
@@ -588,7 +608,11 @@ def main()
   Binance::Api::Configuration.api_key    = api_key
   debug("Loading Secret Key")
   Binance::Api::Configuration.secret_key = secret_key
-  algo_bb1(ask_side())
+#  algo_bb1(ask_side())
+  side = ask_side()
+  while true do
+    side = algo_bb2(side)
+  end
 end
 
 main()
