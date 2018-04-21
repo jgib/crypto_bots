@@ -111,7 +111,7 @@ def debug(text)
   # OUTPUT: Displays string input prepended with timestamp if DEBUG is set to true in config.
   if DEBUG == true
     time = get_timestamp
-    puts "#{time} ::: #{text}"
+    STDERR.puts("#{time} ::: #{text}")
   end
 end
 
