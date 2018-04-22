@@ -100,6 +100,8 @@ FILLED_WAIT   = 45                                                # Number of se
 
 # Add check for: if sell price <= buy price * fees
 
+# Add check for bband range... only trade if their is enought delta between the upper and lower bands.
+
 #########
 # TO DO #
 #########
@@ -553,8 +555,8 @@ def check_filled(order_id,side)
     lband  = bbands[2].to_f.floor2(ROUND)
     price  = get_order_price(order_id).to_f.floor2(ROUND)
     if(side == "buy")
-      debug("Checking if lband == price #{lband} == #{price}")
-      if(lband == price)
+      debug("Checking if lband * BUY_PERCENT == price #{lband} * #{SELL_PERCENT} == #{price}")
+      if((lband * BUY_PERCENT).floor2(ROUND) == price)
         debug("True")
         check_filled(order_id,side)
       else
@@ -567,9 +569,11 @@ def check_filled(order_id,side)
       if(stop_order(order_id))
         debug("True")
         return(true)
-      elsif(mband == price)
+#      elsif(mband == price)
+      elsif((uband * SELL_PERCENT).floor2(ROUND) == price)
         debug("False")
-        debug("mband == price #{mband} == #{price}")
+#        debug("mband * SELL_PERCENT == price #{mband} * #{SELL_PERCENT} == #{price}")
+        debug("uband * SELL_PERCENT == price #{uband} * #{SELL_PERCENT} == #{price}")
         check_filled(order_id,side)
       else
         debug("False")
