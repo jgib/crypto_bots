@@ -36,7 +36,7 @@ PAIR2         = "USDT"                                            # Second half 
 SYMBOL        = "#{PAIR1}#{PAIR2}"                                # Currency pair.
 INTERVAL      = "5m"                                              # Candlestick intervals.  Options are: 1m, 3m, 5m, 15m, 30m, 1h, 2h, 4h, 6h, 8h, 12h, 1d, 3d, 1w, 1M
 BUY_PERCENT   = 1 + 0.00115                                       # Percent of price to buy at.  (1 - 0.02) = 2% under.  (1 + 0.02) = 2% over.
-SELL_PERCENT  = 1 - 0.00115                                       # Percent of price to sell at. (1 - 0.02) = 2% under.  (1 + 0.02) = 2% over.
+SELL_PERCENT  = 1 + 0.00115                                       # Percent of price to sell at. (1 - 0.02) = 2% under.  (1 + 0.02) = 2% over.
 TRADE_PERCENT = 1                                                 # Percent of total capital to trade.
 PERIOD        = 20                                                # Number of candles used to calculate SMA and BBANDS.
 STOP_PERCENT  = 1 - 0.026                                         # Percent past the buy price to exit the trade.  1 - 0.01 = 1% past buy price.
