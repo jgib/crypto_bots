@@ -39,7 +39,7 @@ BUY_PERCENT   = 1 + 0.00115                                       # Percent of p
 SELL_PERCENT  = 1 + 0.00115                                       # Percent of price to sell at. (1 - 0.02) = 2% under.  (1 + 0.02) = 2% over.
 TRADE_PERCENT = 1                                                 # Percent of total capital to trade.
 PERIOD        = 20                                                # Number of candles used to calculate SMA and BBANDS.
-STOP_PERCENT  = 1 - 0.026                                         # Percent past the buy price to exit the trade.  1 - 0.01 = 1% past buy price.
+STOP_PERCENT  = 1 - 0.03                                          # Percent past the buy price to exit the trade.  1 - 0.01 = 1% past buy price.
 STOP_WAIT     = 60 * 20                                           # Time to wait in seconds after stop condition reached.
 BUY_FEE       = 1 - 0.0005                                        # Trade fee for buying.
 SELL_FEE      = 1 - 0.0005                                        # Trade fee for selling.
