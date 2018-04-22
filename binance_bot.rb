@@ -35,14 +35,16 @@ PAIR1         = "BNB"                                             # First half o
 PAIR2         = "USDT"                                            # Second half of currency pair.
 SYMBOL        = "#{PAIR1}#{PAIR2}"                                # Currency pair.
 INTERVAL      = "5m"                                              # Candlestick intervals.  Options are: 1m, 3m, 5m, 15m, 30m, 1h, 2h, 4h, 6h, 8h, 12h, 1d, 3d, 1w, 1M
-BUY_PERCENT   = 1                                                 # Percent of price to buy at.  (1 - 0.02) = 2% under.  (1 + 0.02) = 2% over.
-SELL_PERCENT  = 1                                                 # Percent of price to sell at. (1 - 0.02) = 2% under.  (1 + 0.02) = 2% over.
+BUY_PERCENT   = 1 - 0.00115                                       # Percent of price to buy at.  (1 - 0.02) = 2% under.  (1 + 0.02) = 2% over.
+SELL_PERCENT  = 1 - 0.00115                                       # Percent of price to sell at. (1 - 0.02) = 2% under.  (1 + 0.02) = 2% over.
 TRADE_PERCENT = 1                                                 # Percent of total capital to trade.
 PERIOD        = 20                                                # Number of candles used to calculate SMA and BBANDS.
-STOP_PERCENT  = 1 - 0.02                                          # Percent past the buy price to exit the trade.  1 - 0.01 = 1% past buy price.
-STOP_WAIT     = 60 * 60 * 1.5                                     # Time to wait in seconds after stop condition reached.
-FEE           = 0.0005                                            # Trade fee for buy and sell.
+STOP_PERCENT  = 1 - 0.026                                         # Percent past the buy price to exit the trade.  1 - 0.01 = 1% past buy price.
+STOP_WAIT     = 60 * 20                                           # Time to wait in seconds after stop condition reached.
+BUY_FEE       = 1 - 0.0005                                        # Trade fee for buying.
+SELL_FEE      = 1 - 0.0005                                        # Trade fee for selling.
 REQUEST_TIME  = 0.3                                               # Time in seconds to wait before sending request. (0.15 Isn't always long enough for API data to update on server).
+FILLED_WAIT   = 45                                                # Number of seconds to wait for order to be filled.
 
 ##########
 # CONFIG #
@@ -79,8 +81,9 @@ REQUEST_TIME  = 0.3                                               # Time in seco
 
 #   Reference for binance API: https://github.com/jakenberg/binance-ruby
 
-# IDEA: Add function that scans all currency pairs on exchange, looking for the most volitle (and takes into consideration volume) and selects that pair for trading (would also need to
+# IDEAS: Add function that scans all currency pairs on exchange, looking for the most volitle (and takes into consideration volume) and selects that pair for trading (would also need to
 #       issue a market order if the base currency isn't currently in our balance).
+#
 
 #########
 # NOTES #
@@ -91,8 +94,11 @@ REQUEST_TIME  = 0.3                                               # Time in seco
 #########
 
 # Add email functionality
+
 # Re-write algo logic, Ruby has limited recursion capability and this will eventually be a problem for exceptionally long trade swings (I'm guessing it will be good for at least 3 - 6
 # hours.
+
+# Add check for: if sell price <= buy price * fees
 
 #########
 # TO DO #
@@ -119,7 +125,7 @@ end
 def wait(seconds)
   # INPUT:  INTEGER or FLOAT
   # OUTPUT: NONE
-  debug("Waiting #{seconds} seconds...")
+  debug("Waiting #{seconds} seconds...  [Approx. #{(seconds / 60).round(3)} Mins]")
   sleep(seconds)
 end
 
@@ -472,11 +478,15 @@ def trade(side)
   end
   if(side == "sell")
     debug("We are selling")
-    debug("Is ticker price: #{ticker} <= mband: #{mband}")
-    if(ticker <= mband)
+#    debug("Is ticker price: #{ticker} <= mband: #{mband}")
+#    if(ticker <= mband)
+    debug("Is ticker price: #{ticker} <= uband: #{uband}")
+    if(ticker <= uband)
       debug("True")
-      debug("Calculating price: #{mband} * #{SELL_PERCENT}")
-      price    = (mband * SELL_PERCENT).floor2(ROUND)
+#      debug("Calculating price: #{mband} * #{SELL_PERCENT}")
+#      price    = (mband * SELL_PERCENT).floor2(ROUND)
+      debug("Calculating price: #{uband} * #{SELL_PERCENT}")
+      price    = (uband * SELL_PERCENT).floor2(ROUND)
       debug("Price is: #{price}")
       debug("Calculating quantity: #{balance1}")
       qty      = balance1.floor2(ROUND)
@@ -531,8 +541,10 @@ def check_filled(order_id,side)
     debug("True")
     return(true)
   elsif(status == "PARTIALLY_FILLED")
-    wait(1)
-    return(check_filled(order_id,side))
+    debug("Waiting for partial order to be filled")
+    wait(FILLED_WAIT)
+    cancel_order(order_id)
+    return(true)
   else
     debug("False")
     bbands = calc_bbands(get_candles())
