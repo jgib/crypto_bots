@@ -24,6 +24,7 @@ puts ""
 $sender_email   = nil
 $email_password = nil
 $dest_emails    = Array.new
+$buy_price      = nil
 
 ##########
 # CONFIG #
@@ -46,8 +47,8 @@ TRADE_PERCENT = 1                                                 # Percent of t
 PERIOD        = 20                                                # Number of candles used to calculate SMA and BBANDS.
 STOP_PERCENT  = 1 - 0.03                                          # Percent past the buy price to exit the trade.  1 - 0.01 = 1% past buy price.
 STOP_WAIT     = 60 * 20                                           # Time to wait in seconds after stop condition reached.
-BUY_FEE       = 1 - 0.0005                                        # Trade fee for buying.
-SELL_FEE      = 1 - 0.0005                                        # Trade fee for selling.
+BUY_FEE       = 1 + 0.0005                                        # Trade fee for buying.
+SELL_FEE      = 1 + 0.0005                                        # Trade fee for selling.
 REQUEST_TIME  = 0.3                                               # Time in seconds to wait before sending request. (0.15 Isn't always long enough for API data to update on server).
 FILLED_WAIT   = 45                                                # Number of seconds to wait for order to be filled.
 
@@ -164,7 +165,7 @@ def decrypt()
   return(output)
 end
 
-def mail(title,message)
+def mail(title.to_s,message.to_s)
   $dest_emails.each do |send_to|
     debug("Preparing to send email to #{send_to}")
     debug("Logged in to #{$sender_email}")
@@ -271,10 +272,11 @@ def limit_order(side,qty,price)
   # OUTPUT: INTEGER, Order ID.
   wait(REQUEST_TIME)
   debug("Initiating limit order: side=#{side}, qty=#{qty}, price=#{price}")
-  if(qty == 0)
-    debug("Quantity is: #{qty}, exiting...")
-    exit()
-  end
+  $buy_price = price.to_f
+#  if(qty == 0)
+#    debug("Quantity is: #{qty}, exiting...")
+#    exit()
+#  end
   begin
     order_id = Binance::Api::Order.create!(side: "#{side}", quantity: "#{qty}", price: "#{price}", symbol: "#{SYMBOL}", timeInForce: "GTC", type: "LIMIT")[:orderId].to_s
     debug("Order ID: #{order_id}")
@@ -516,8 +518,12 @@ def trade(side)
       debug("Calculating quantity: #{balance1}")
       qty      = balance1.floor2(ROUND)
       debug("Quantity is: #{qty}")
-      order_id = limit_order("SELL",qty,price)
-      return(order_id)
+      if(price > $buy_price * BUY_FEE * SELL_FEE)
+        order_id = limit_order("SELL",qty,price)
+        return(order_id)
+      else
+        return(trade(side))
+      end
     else
       debug("False")
       debug("Calculating price: #{ticker} * #{SELL_PERCENT}")
@@ -526,8 +532,12 @@ def trade(side)
       debug("Calculating quantity: #{balance1} * #{price}")
       qty      = balance1.floor2(ROUND)
       debug("Quantity is: #{qty}")
-      order_id = limit_order("SELL",qty,price)
-      return(order_id)
+      if(price > $buy_price * BUY_FEE * SELL_FEE)
+        order_id = limit_order("SELL",qty,price)
+        return(order_id)
+      else
+        return(trade(side))
+      end
     end
   end
 end
