@@ -3,6 +3,7 @@
 require 'pp'
 require 'json'
 require 'date'
+require 'gmail'
 require 'io/console'
 require 'binance-ruby'
 
@@ -19,6 +20,10 @@ system("clear")
 print "Decryption Passphrase: "
 pass = STDIN.noecho(&:gets).chomp
 puts ""
+
+$sender_email   = nil
+$email_password = nil
+$dest_emails    = Array.new
 
 ##########
 # CONFIG #
@@ -111,7 +116,7 @@ def get_timestamp()
   # OUTPUT: Timestamp in format TIME ::: EPOCH
   time  = Time.now.to_s
   epoch = Time.now.to_f.round(4)
-  return("#{time} ::: #{epoch}")
+  return("#{time}:#{epoch}")
 end
 
 def debug(text)
@@ -120,7 +125,7 @@ def debug(text)
   if DEBUG == true
     parent = caller_locations[0].label.to_s
     time   = get_timestamp
-    STDERR.puts("#{time} ::: #{parent} ::: #{text}")
+    STDERR.puts("#{time}:#{parent}:#{text}")
   end
 end
 
@@ -159,6 +164,23 @@ def decrypt()
   return(output)
 end
 
+def mail(title,message)
+  $dest_emails.each do |send_to|
+    debug("Preparing to send email to #{send_to}")
+    debug("Logged in to #{$sender_email}")
+    gmail = Gmail.connect($sender_email,$email_password)
+    email = gmail.compose do
+      to      send_to
+      subject title
+      body    message
+    end
+    debug("Sending email")
+    gmail.deliver(email)
+    debug("Logging out")
+    gmail.logout
+  end
+end
+
 def get_candles()
   # INPUT:  NONE
   # OUTPUT: ARRAY of ARRAYS, In the form: [[Open Time, Open, High, Low, Close, Volume, Close Time, Quote Asset Volume, Number of Trades, Take Buy Base Asset Volume, 
@@ -171,7 +193,7 @@ def get_candles()
     debug("ERROR")
     pp error
     pp error.class
-    exit()
+    mail("ERROR",error)
     return(get_candles())
   else
     return(output)
@@ -260,7 +282,7 @@ def limit_order(side,qty,price)
     debug("ERROR")
     pp error
     pp error.class
-    exit()
+    mail("ERROR",error)
     return(limit_order(side,qty,price))
   else
     return(order_id)
@@ -279,7 +301,7 @@ def market_order(side,qty)
     debug("ERROR")
     pp error
     pp error.class
-    exit()
+    mail("ERROR",error)
     return(market_order(side,qty))
   else
     return(order_id)
@@ -298,6 +320,7 @@ def cancel_order(order_id)
     debug("ERROR")
     pp error
     pp error.class
+    mail("ERROR",error)
     #return(cancel_order(order_id))
     # Possbile the order was filled between being checked if filled and being canceled.
     return()
@@ -315,7 +338,7 @@ def check_order_status(order_id)
     debug("ERROR")
     pp error
     pp error.class
-    exit()
+    mail("ERROR",error)
     return(check_order_status(order_id))
   else
     if(data.is_a?(Array))
@@ -348,7 +371,7 @@ def get_order_price(order_id)
     debug("ERROR")
     pp error
     pp error.class
-    exit()
+    mail("ERROR",error)
     return(get_order_price(order_id))
   else
     return(price)
@@ -367,7 +390,7 @@ def get_ticker()
     debug("ERROR")
     pp error
     pp error.class
-    exit()
+    mail("ERROR",error)
     return(get_ticker())
   else
     return(ticker_price)
@@ -386,7 +409,7 @@ def get_balance()
     debug("ERROR")
     pp error
     pp error.class
-    exit()
+    mail("ERROR",error)
     return(get_balance())
   else
     balances[:balances].each do |index|
@@ -415,7 +438,7 @@ def price_filter()
     debug("ERROR")
     pp error
     pp error.class
-    exit()
+    mail("ERROR",error)
     return(price_filter())
   else
     currencies.each do |currency|
@@ -524,6 +547,7 @@ def stop_order(order_id)
     debug("Initiating Market-Stop order.")
     cancel_order(order_id)
     qty = get_balance()[0].to_f.floor2(ROUND)
+    mail("STOP ORDER",qty)
     market_order("sell",qty)
     debug("Initiating stop wait time.")
     wait(STOP_WAIT)
@@ -642,6 +666,7 @@ def ask_side()
     ask_side()
   end
 end
+
 def main()
   # INPUT:  NONE
   # OUTPUT: NONE
@@ -651,11 +676,11 @@ def main()
   debug("Getting Secret Key")
   secret_key     = keys[1]
   debug("Getting Sender Email")
-  sender_email   = keys[2]
+  $sender_email  = keys[2]
   debug("Getting Email Password")
-  email_password = keys[3]
+  $email_password = keys[3]
   debug("Getting Destination Email(s)")
-  dest_emails    = keys[4]
+  $dest_emails    = keys[4]
   debug("Loading API Key")
   Binance::Api::Configuration.api_key    = api_key
   debug("Loading Secret Key")
