@@ -165,7 +165,9 @@ def decrypt()
   return(output)
 end
 
-def mail(title.to_s,message.to_s)
+def mail(title,message)
+  title   = title.to_s
+  message = message.to_s
   $dest_emails.each do |send_to|
     debug("Preparing to send email to #{send_to}")
     debug("Logged in to #{$sender_email}")
@@ -518,11 +520,13 @@ def trade(side)
       debug("Calculating quantity: #{balance1}")
       qty      = balance1.floor2(ROUND)
       debug("Quantity is: #{qty}")
-      if(price > $buy_price * BUY_FEE * SELL_FEE)
-        order_id = limit_order("SELL",qty,price)
-        return(order_id)
-      else
-        return(trade(side))
+      if($buy_price != nil)
+        if(price > $buy_price * BUY_FEE * SELL_FEE)
+          order_id = limit_order("SELL",qty,price)
+          return(order_id)
+        else
+          return(trade(side))
+        end
       end
     else
       debug("False")
@@ -532,11 +536,13 @@ def trade(side)
       debug("Calculating quantity: #{balance1} * #{price}")
       qty      = balance1.floor2(ROUND)
       debug("Quantity is: #{qty}")
-      if(price > $buy_price * BUY_FEE * SELL_FEE)
-        order_id = limit_order("SELL",qty,price)
-        return(order_id)
-      else
-        return(trade(side))
+      if($buy_price != nil)
+        if(price > $buy_price * BUY_FEE * SELL_FEE)
+          order_id = limit_order("SELL",qty,price)
+          return(order_id)
+        else
+          return(trade(side))
+        end
       end
     end
   end
